@@ -1,7 +1,7 @@
 export function TableOfContents() {
   return (
     <aside className="hidden lg:block">
-      <div className="sticky top-10 border-l border-white/10 pl-6">
+      <div className="sticky top-24 border-l border-white/10 pl-6">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">
           Contents
         </p>

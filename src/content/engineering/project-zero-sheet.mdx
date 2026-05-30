@@ -1,0 +1,56 @@
+---
+title: "Project Zero-Sheet"
+description: "A concise engineering note on reducing spreadsheet friction in catalog operations."
+date: "2026-05-29"
+author: "Editorial team"
+category: "ENGINEERING"
+tags:
+  - operations
+  - workflow
+  - catalog
+status: "Draft"
+readingTime: "3 min read"
+projectStatus: "In progress"
+stack:
+  - "Next.js"
+  - "TypeScript"
+domain: "Product Operations"
+---
+
+# Project Zero-Sheet
+
+Project Zero-Sheet is a small systems effort aimed at reducing the everyday spreadsheet friction that appears in catalog operations. The goal is not to remove spreadsheets from every workflow, but to move repeated checks, status updates, and handoffs into a clearer operational surface.
+
+## Problem
+
+Catalog teams often rely on spreadsheets because they are flexible and familiar. Over time, that flexibility can become expensive: duplicate columns, stale ownership, unclear validation rules, and manual copy-paste between tools.
+
+The engineering question is simple: which recurring spreadsheet tasks can become structured product workflows without making the process heavier?
+
+## Approach
+
+The first version focuses on three safe improvements:
+
+- Define a stable item status model.
+- Capture validation results close to the catalog item.
+- Make ownership and next action visible without extra coordination.
+
+This keeps the work bounded. It avoids a large migration and gives operators a way to compare the structured workflow with the spreadsheet process it replaces.
+
+## Early Design Notes
+
+| Area | Direction |
+| --- | --- |
+| Status | Use a small set of explicit workflow states. |
+| Validation | Show checks as review signals, not hidden formulas. |
+| Ownership | Assign one accountable owner per item. |
+
+## Expected Outcome
+
+The expected result is a calmer catalog workflow: fewer manual reconciliations, clearer review queues, and less ambiguity about what needs attention next.
+
+## Next Steps
+
+- Prototype the status model with sample catalog data.
+- Review the workflow with operators.
+- Measure whether handoff time and correction loops decrease.

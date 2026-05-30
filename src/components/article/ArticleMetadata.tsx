@@ -3,6 +3,7 @@ type ArticleMetadataProps = {
   date: string;
   category: string;
   status: string;
+  readingTime?: string;
 };
 
 const formatter = new Intl.DateTimeFormat("en", {
@@ -26,11 +27,13 @@ export function ArticleMetadata({
   date,
   category,
   status,
+  readingTime,
 }: ArticleMetadataProps) {
   const items = [
     category,
     date ? formatDate(date) : "",
     author,
+    readingTime,
     status,
   ].filter(Boolean);
 

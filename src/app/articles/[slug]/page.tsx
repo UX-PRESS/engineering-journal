@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import * as runtime from "react/jsx-runtime";
-import { compile, run } from "@mdx-js/mdx";
 
 import { ArticleLayout } from "@/components/article/ArticleLayout";
+import { MDXContent } from "@/components/article/MDXContent";
 import { getAllSlugs } from "@/lib/content/getAllSlugs";
 import { getArticleBySlug } from "@/lib/content/getArticleBySlug";
 
@@ -41,20 +40,9 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
     notFound();
   }
 
-  const code = String(
-    await compile(article.content, {
-      outputFormat: "function-body",
-      development: false,
-    }),
-  );
-  const { default: MDXContent } = await run(code, {
-    ...runtime,
-    baseUrl: import.meta.url,
-  });
-
   return (
     <ArticleLayout article={article}>
-      <MDXContent />
+      <MDXContent source={article.content} />
     </ArticleLayout>
   );
 }

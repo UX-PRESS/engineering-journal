@@ -3,47 +3,67 @@ import path from "node:path";
 
 import matter from "gray-matter";
 
+import {
+  CONTENT_FOLDERS,
+  type Article,
+  type ArticleCollection,
+  type ArticleFrontmatter,
+  type ArticleSummary,
+  type RawArticleFrontmatter,
+} from "./types";
+
 const CONTENT_ROOT = path.join(process.cwd(), "src", "content");
-const CONTENT_FOLDERS = [
-  "incidents",
-  "engineering",
-  "security",
-  "labs",
-  "research",
-  "post-mortems",
-] as const;
 
-export type ArticleFrontmatter = {
-  title: string;
-  description: string;
-  author: string;
-  date: string;
-  tags: string[];
-  category: string;
-  status: string;
+const CATEGORY_BY_COLLECTION: Record<ArticleCollection, string> = {
+  incidents: "INCIDENT",
+  engineering: "ENGINEERING",
+  security: "SECURITY",
+  labs: "LABS",
+  research: "RESEARCH",
+  "post-mortems": "POST-MORTEM",
 };
 
-export type ArticleSummary = ArticleFrontmatter & {
-  slug: string;
-  collection: (typeof CONTENT_FOLDERS)[number];
-  filePath: string;
-};
+function readDirectoryRecursive(directory: string): string[] {
+  if (!fs.existsSync(directory)) {
+    return [];
+  }
 
-export type Article = ArticleSummary & {
-  content: string;
-};
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const entryPath = path.join(directory, entry.name);
 
-type RawFrontmatter = Partial<Record<keyof ArticleFrontmatter, unknown>>;
+    if (entry.isDirectory()) {
+      return readDirectoryRecursive(entryPath);
+    }
+
+    return entry.isFile() && entry.name.endsWith(".mdx") ? [entryPath] : [];
+  });
+}
+
+function getCollectionFromPath(filePath: string): ArticleCollection {
+  const relativePath = path.relative(CONTENT_ROOT, filePath);
+  const [collection] = relativePath.split(path.sep);
+
+  if (CONTENT_FOLDERS.includes(collection as ArticleCollection)) {
+    return collection as ArticleCollection;
+  }
+
+  return "engineering";
+}
+
+function getArticleFilePaths(): string[] {
+  return CONTENT_FOLDERS.flatMap((folder) =>
+    readDirectoryRecursive(path.join(CONTENT_ROOT, folder)),
+  ).filter((filePath) => path.basename(filePath) !== "template.mdx");
+}
 
 function readArticleFile(filePath: string): Article {
   const source = fs.readFileSync(filePath, "utf8");
   const { content, data } = matter(source);
-  const frontmatter = normalizeFrontmatter(data as RawFrontmatter);
-  const collection = path.basename(path.dirname(filePath)) as ArticleSummary["collection"];
+  const collection = getCollectionFromPath(filePath);
   const slug = path.basename(filePath, path.extname(filePath));
 
   return {
-    ...frontmatter,
+    ...normalizeFrontmatter(data as RawArticleFrontmatter, collection),
     slug,
     collection,
     filePath,
@@ -51,52 +71,110 @@ function readArticleFile(filePath: string): Article {
   };
 }
 
-function normalizeFrontmatter(data: RawFrontmatter): ArticleFrontmatter {
+function normalizeFrontmatter(
+  data: RawArticleFrontmatter,
+  collection: ArticleCollection,
+): ArticleFrontmatter {
   return {
-    title: stringify(data.title),
-    description: stringify(data.description),
-    author: stringify(data.author),
+    title: optionalString(data.title, "Untitled article"),
+    description: optionalString(data.description),
     date: normalizeDate(data.date),
-    tags: normalizeTags(data.tags),
-    category: stringify(data.category),
-    status: stringify(data.status),
+    author: optionalString(data.author, "Editorial team"),
+    category: optionalString(data.category, CATEGORY_BY_COLLECTION[collection]),
+    tags: normalizeStringArray(data.tags),
+    status: optionalString(data.status, "Draft"),
+    readingTime: optionalString(data.readingTime, "1 min read"),
+    severity: optionalStringOrUndefined(data.severity),
+    impact: optionalStringOrUndefined(data.impact),
+    affectedSystems: optionalStringArray(data.affectedSystems),
+    projectStatus: optionalStringOrUndefined(data.projectStatus),
+    stack: optionalStringArray(data.stack),
+    domain: optionalStringOrUndefined(data.domain),
+    securityDomain: optionalStringOrUndefined(data.securityDomain),
+    labOnly: optionalBoolean(data.labOnly),
+    defensiveFocus: optionalStringOrUndefined(data.defensiveFocus),
+    tools: optionalStringArray(data.tools),
+    environment: optionalStringOrUndefined(data.environment),
+    difficulty: optionalStringOrUndefined(data.difficulty),
+    researchArea: optionalStringOrUndefined(data.researchArea),
+    hypothesis: optionalStringOrUndefined(data.hypothesis),
+    references: optionalStringArray(data.references),
+    incidentDate: optionalDate(data.incidentDate),
+    duration: optionalStringOrUndefined(data.duration),
+    rootCause: optionalStringOrUndefined(data.rootCause),
+    correctiveActions: optionalStringArray(data.correctiveActions),
   };
 }
 
-function stringify(value: unknown): string {
-  return typeof value === "string" ? value : "";
+function optionalString(value: unknown, fallback = ""): string {
+  return typeof value === "string" && value.trim() ? value : fallback;
+}
+
+function optionalStringOrUndefined(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined;
 }
 
 function normalizeDate(value: unknown): string {
+  return optionalDate(value) ?? new Date(0).toISOString().slice(0, 10);
+}
+
+function optionalDate(value: unknown): string | undefined {
   if (value instanceof Date) {
     return value.toISOString().slice(0, 10);
   }
 
-  return stringify(value);
+  return optionalStringOrUndefined(value);
 }
 
-function normalizeTags(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.filter((tag): tag is string => typeof tag === "string");
+function normalizeStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
-function getArticleFilePaths(): string[] {
-  return CONTENT_FOLDERS.flatMap((folder) => {
-    const directory = path.join(CONTENT_ROOT, folder);
+function optionalStringArray(value: unknown): string[] | undefined {
+  const items = normalizeStringArray(value);
 
-    if (!fs.existsSync(directory)) {
-      return [];
-    }
+  return items.length > 0 ? items : undefined;
+}
 
-    return fs
-      .readdirSync(directory)
-      .filter((fileName) => fileName.endsWith(".mdx"))
-      .filter((fileName) => fileName !== "template.mdx")
-      .map((fileName) => path.join(directory, fileName));
-  });
+function optionalBoolean(value: unknown): boolean | undefined {
+  return typeof value === "boolean" ? value : undefined;
+}
+
+function toArticleSummary(article: Article): ArticleSummary {
+  return {
+    title: article.title,
+    description: article.description,
+    date: article.date,
+    author: article.author,
+    category: article.category,
+    tags: article.tags,
+    status: article.status,
+    readingTime: article.readingTime,
+    severity: article.severity,
+    impact: article.impact,
+    affectedSystems: article.affectedSystems,
+    projectStatus: article.projectStatus,
+    stack: article.stack,
+    domain: article.domain,
+    securityDomain: article.securityDomain,
+    labOnly: article.labOnly,
+    defensiveFocus: article.defensiveFocus,
+    tools: article.tools,
+    environment: article.environment,
+    difficulty: article.difficulty,
+    researchArea: article.researchArea,
+    hypothesis: article.hypothesis,
+    references: article.references,
+    incidentDate: article.incidentDate,
+    duration: article.duration,
+    rootCause: article.rootCause,
+    correctiveActions: article.correctiveActions,
+    slug: article.slug,
+    collection: article.collection,
+    filePath: article.filePath,
+  };
 }
 
 export function getArticles(): ArticleSummary[] {
@@ -112,19 +190,4 @@ export function getArticleContentBySlug(slug: string): Article | null {
   );
 
   return articlePath ? readArticleFile(articlePath) : null;
-}
-
-function toArticleSummary(article: Article): ArticleSummary {
-  return {
-    title: article.title,
-    description: article.description,
-    author: article.author,
-    date: article.date,
-    tags: article.tags,
-    category: article.category,
-    status: article.status,
-    slug: article.slug,
-    collection: article.collection,
-    filePath: article.filePath,
-  };
 }

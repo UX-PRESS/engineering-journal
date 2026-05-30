@@ -1,4 +1,4 @@
-import type { ArticleSummary } from "@/lib/content/getArticles";
+import type { ArticleSummary } from "@/lib/content/types";
 
 import { ArticleMetadata } from "./ArticleMetadata";
 import { ArticleTags } from "./ArticleTags";
@@ -27,6 +27,7 @@ export function ArticleHeader({ article }: ArticleHeaderProps) {
           author={article.author}
           category={article.category}
           date={article.date}
+          readingTime={article.readingTime}
           status={article.status}
         />
         <ArticleTags tags={article.tags} />
