@@ -1,0 +1,64 @@
+---
+title: "Incident title"
+description: "One-sentence summary of the incident, impact, and recovery focus."
+date: "YYYY-MM-DD"
+author: "Author name"
+category: "INCIDENT"
+tags:
+  - reliability
+  - operations
+status: "Draft"
+readingTime: "0 min read"
+severity: "SEV-0 | SEV-1 | SEV-2 | SEV-3"
+impact: "Brief user, system, or business impact summary."
+affectedSystems:
+  - "system-name"
+---
+
+# Incident title
+
+{/* Replace placeholders with verified operational facts. Do not include secrets, customer-identifying data, private infrastructure details, or confidential vendor information. */}
+
+## Summary
+
+Describe what happened in plain language. Include the primary failure mode, visible symptoms, and the final recovery state.
+
+## Impact
+
+Document who or what was affected, how severe the impact was, and how long the impact lasted. Keep this factual and measurable.
+
+## Timeline
+
+- **YYYY-MM-DD HH:MM UTC**: Detection signal or first report.
+- **YYYY-MM-DD HH:MM UTC**: Initial triage and ownership established.
+- **YYYY-MM-DD HH:MM UTC**: Mitigation started.
+- **YYYY-MM-DD HH:MM UTC**: Service recovered.
+- **YYYY-MM-DD HH:MM UTC**: Follow-up review completed.
+
+## Detection
+
+Explain the alert, dashboard, report, or operational signal that identified the incident. Note any gaps in detection quality.
+
+## Root Cause
+
+State the confirmed root cause. Separate confirmed causes from contributing conditions.
+
+## Resolution
+
+Explain the mitigation and recovery steps at a high level. Avoid exposing sensitive commands, internal hostnames, credentials, or private runbook details.
+
+## What Went Well
+
+- Capture practices, tools, or decisions that helped the response.
+
+## What Could Improve
+
+- Capture friction, missing context, or coordination gaps.
+
+## Follow-Up Actions
+
+- [ ] Action item, owner, and expected completion date.
+
+## References
+
+- Link to public or internal-safe references only.
